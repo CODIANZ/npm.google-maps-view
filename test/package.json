@@ -6,26 +6,28 @@
     "serve": "vue-cli-service serve --mode local",
     "copy-dist": "cpx -C ../dist/**       ./node_modules/@codianz/google-maps-view/dist",
     "copy-pkg": "cpx -C ../package.json  ./node_modules/@codianz/google-maps-view/",
-    "copy-cmp": "cpx -C ../components/** ./node_modules/@codianz/google-maps-view/components",
+    "copy-cmp": "cpx -C ../components/** ./node_modules/@codianz/google-maps-view/dist/components",
     "copy-all": "npm run copy-dist && npm run copy-pkg && npm run copy-cmp",
     "build": "vue-cli-service build"
   },
   "devDependencies": {
+    "@codianz/google-maps-view": "0.0.1",
     "@codianz/loglike": "0.0.0",
     "@codianz/rx": "0.0.1",
     "@codianz/utils": "0.0.1",
     "@googlemaps/google-maps-services-js": "^3.1.16",
     "@googlemaps/js-api-loader": "^1.12.1",
-    "@vue/composition-api": "^1.0.0-rc.12",
-    "core-js": "^3.6.5",
-    "rxjs": "^6.6.7",
-    "vue": "^2.6.11",
     "@types/google.maps": "^3.45.4",
+    "@types/node": "^15.12.5",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-typescript": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
+    "@vue/composition-api": "^1.0.0-rc.12",
+    "core-js": "^3.6.5",
     "cpx": "^1.5.0",
+    "rxjs": "^6.6.7",
     "typescript": "~4.1.5",
+    "vue": "^2.6.11",
     "vue-template-compiler": "^2.6.11"
   }
 }

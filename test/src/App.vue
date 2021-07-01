@@ -6,12 +6,13 @@
 
 <script lang="ts">
 import { defineComponent } from "@vue/composition-api";
-import { setGoogleMapsApiKey } from "@codianz/google-maps-view/dist/GMapApi";
+import * as gm from "@codianz/google-maps-view";
 import GoogleMapsView from "@codianz/google-maps-view/components/GoogleMapsView.vue";
+
 
 export default defineComponent({
   setup() {
-    setGoogleMapsApiKey(process.env["VUE_APP_GOOGLE_MAPS_API_KEY"]);
+    gm.GMapApi.setGoogleMapsApiKey(process.env["VUE_APP_GOOGLE_MAPS_API_KEY"]);
   },
   components: {
     GoogleMapsView
