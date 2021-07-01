@@ -2,7 +2,7 @@
   "name": "@codianz/google-maps-view",
   "version": "0.0.0",
   "description": "google maps with vue.js.",
-  "main": "./dist/src/index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
