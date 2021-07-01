@@ -1,0 +1,6 @@
+dist/test/
+dist/**/*.map.js
+.vscode/
+src/
+test/
+tsconfig.json
