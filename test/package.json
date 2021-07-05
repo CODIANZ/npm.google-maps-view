@@ -5,8 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve --mode local",
     "copy-dist": "cpx -C ../dist/**       ./node_modules/@codianz/google-maps-view/dist",
-    "copy-pkg": "cpx -C ../package.json  ./node_modules/@codianz/google-maps-view/",
-    "copy-cmp": "cpx -C ../components/** ./node_modules/@codianz/google-maps-view/dist/components",
+    "copy-pkg":  "cpx -C ../package.json  ./node_modules/@codianz/google-maps-view/",
+    "copy-cmp":  "cpx -C ../components/** ./node_modules/@codianz/google-maps-view/components",
     "copy-all": "npm run copy-dist && npm run copy-pkg && npm run copy-cmp",
     "build": "vue-cli-service build"
   },

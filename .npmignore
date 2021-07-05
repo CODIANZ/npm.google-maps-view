@@ -4,4 +4,3 @@ dist/**/*.map.js
 src/
 test/
 tsconfig.json
-components/
