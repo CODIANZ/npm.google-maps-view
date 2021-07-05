@@ -11,7 +11,7 @@
     "build": "vue-cli-service build"
   },
   "devDependencies": {
-    "@codianz/google-maps-view": "0.0.1",
+    "@codianz/google-maps-view": "0.0.2",
     "@codianz/loglike": "0.0.0",
     "@codianz/rx": "0.0.1",
     "@codianz/utils": "0.0.1",
@@ -26,7 +26,7 @@
     "core-js": "^3.6.5",
     "cpx": "^1.5.0",
     "rxjs": "^6.6.7",
-    "typescript": "~4.1.5",
+    "typescript": "^4.3.5",
     "vue": "^2.6.11",
     "vue-template-compiler": "^2.6.11"
   }
