@@ -72,6 +72,6 @@
   "exclude": [
     "./test/*",
     "./dist/*",
-    "./components"
+    "./components/*"
   ]
 }
