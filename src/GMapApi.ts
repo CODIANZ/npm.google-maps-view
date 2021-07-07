@@ -230,6 +230,7 @@ export class GMapApi {
         renderer.addListener("directions_changed", () => {
           this.m_onDirectionsChanged.next(id);
         });
+        this.deleteDirectionsRenderer(id);
         this.m_directionsRenderers[id] = renderer;
         return renderer;
       })
@@ -362,10 +363,10 @@ export class GMapApi {
         this.m_onMapObjectDragged.next(id);
       });
       marker.setMap(map);
-      this.m_mapObjects[id] = {
+      this.addMapObject(id, {
         t: "marker",
         o: marker
-      }
+      });
       return this.m_mapObjects[id];
     }));
   }
@@ -415,10 +416,10 @@ export class GMapApi {
           this.m_onMapObjectDragged.next(id);
         });
         circle.setMap(map);
-        this.m_mapObjects[id] = {
+        this.addMapObject(id, {
           t: "circle",
           o: circle
-        }
+        });
       }))
     );
   }
@@ -434,12 +435,17 @@ export class GMapApi {
       .pipe(map(({map}) => {
         const overlay = ctor();
         overlay.setMap(map);
-        this.m_mapObjects[id] = {
+        this.addMapObject(id, {
           t: "overlay",
           o: overlay
-        }
+        });
       }))
     );
+  }
+
+  public addMapObject(id: string, obj: mapObject_t) {
+    this.deleteMapObject(id);
+    this.m_mapObjects[id] = obj;
   }
 
   public deleteMapObject(id: string) {
