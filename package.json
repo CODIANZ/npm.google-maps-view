@@ -1,6 +1,6 @@
 {
   "name": "@codianz/google-maps-view",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "google maps with vue.js.",
   "main": "./dist/index.js",
   "scripts": {

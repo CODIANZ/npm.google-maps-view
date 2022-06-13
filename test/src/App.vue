@@ -7,7 +7,7 @@
 <script lang="ts">
 import { defineComponent } from "@vue/composition-api";
 import * as gm from "@codianz/google-maps-view";
-import GoogleMapsView from "@codianz/google-maps-view/components/GoogleMapsView.vue";
+import GoogleMapsView from "@codianz/google-maps-view/components/vue2/GoogleMapsView.vue";
 
 
 export default defineComponent({
