@@ -104,19 +104,39 @@ export function setGoogleMapsApiKey(key: string) {
 type mo_marker_t = {
   t: "marker";
   o: google.maps.Marker;
+  _: string /* tag */;
 };
 
 type mo_circle_t = {
   t: "circle";
   o: google.maps.Circle;
+  _: string /* tag */;
 };
 
 type mo_overlay_t = {
   t: "overlay";
   o: google.maps.OverlayView;
+  _: string /* tag */;
 };
 
-type mapObject_t = mo_marker_t | mo_circle_t | mo_overlay_t;
+type mo_polyline_t = {
+  t: "polyline";
+  o: google.maps.Polyline;
+  _: string /* tag */;
+};
+
+type mo_trafficlayer_t = {
+  t: "trafficlayer";
+  o: google.maps.TrafficLayer;
+  _: string /* tag */;
+};
+
+type mapObject_t =
+  | mo_marker_t
+  | mo_circle_t
+  | mo_overlay_t
+  | mo_polyline_t
+  | mo_trafficlayer_t;
 
 export class GMapApi {
   private m_services_subject = new BehaviorSubject<
@@ -124,6 +144,8 @@ export class GMapApi {
   >(undefined);
   private m_onClick = new Subject<google.maps.LatLng>();
   private m_onDrag = new Subject<void>();
+  private m_onBoundsChanged = new Subject<google.maps.LatLngBounds>();
+  private m_onZoomChanged = new Subject<number>();
   private m_onMapObjectDragged = new Subject<string>();
   private m_onMapObjectClicked = new Subject<string>();
   private m_onDirectionsChanged = new Subject<string>();
@@ -152,10 +174,33 @@ export class GMapApi {
       gmap.addListener("drag", () => {
         this.m_onDrag.next(void 0);
       });
+      gmap.addListener("bounds_changed", () => {
+        const bounds = gmap.getBounds();
+        if(bounds !== undefined){
+          this.m_onBoundsChanged.next(bounds);
+        }
+      });
+      gmap.addListener("zoom_changed", () => {
+        const zoom = gmap.getZoom();
+        if(zoom !== undefined){
+          this.m_onZoomChanged.next(zoom);
+        }
+      });
       this.m_services_subject.next({
         map: gmap,
         directionsService: new google.maps.DirectionsService()
       });
+    }));
+  }
+
+  public rxInitializeForStreetView(
+    element: HTMLElement,
+    opts?: google.maps.StreetViewPanoramaOptions
+  ) {
+    // prettier-ignore
+    return GMapApiLoader.Instance.rxWaitLoaded()
+    .pipe(map(() => {
+      return new google.maps.StreetViewPanorama(element, opts);
     }));
   }
 
@@ -320,6 +365,14 @@ export class GMapApi {
     return this.m_onDrag.asObservable();
   }
 
+  public rxOnBoundsChanged() {
+    return this.m_onBoundsChanged.asObservable();
+  }
+
+  public rxOnZoomChanged() {
+    return this.m_onZoomChanged.asObservable();
+  }
+
   public rxOnMapObjectDragged() {
     return this.m_onMapObjectDragged.asObservable();
   }
@@ -340,15 +393,15 @@ export class GMapApi {
     return this.m_infoWindow.rxEvent();
   }
 
-  public addMarker(id: string, opt: google.maps.MarkerOptions) {
+  public addMarker(id: string, tag: string, opt: google.maps.MarkerOptions) {
     // prettier-ignore
     this.m_sg.append(
       "GMapApi.addMarkerObject",
-      this.rxAddMarker(id, opt)
+      this.rxAddMarker(id, tag, opt)
     );
   }
 
-  public rxAddMarker(id: string, opt: google.maps.MarkerOptions) {
+  public rxAddMarker(id: string, tag: string, opt: google.maps.MarkerOptions) {
     // prettier-ignore
     return this.rxServices()
     .pipe(map(({ map }) => {
@@ -365,25 +418,12 @@ export class GMapApi {
       marker.setMap(map);
       this.addMapObject(id, {
         t: "marker",
-        o: marker
+        o: marker,
+        _: tag
       });
       return this.m_mapObjects[id];
     }));
   }
-
-  // public rxShowInfoWindow(
-  //   targetObjectId: string,
-  //   window: google.maps.InfoWindow
-  // ) {
-  //   // prettier-ignore
-  //   return this.rxServices()
-  //   .pipe(map(({ map }) => {
-  //     if(targetObjectId in this.m_mapObjects){
-  //       window.open(map, this.m_mapObjects[targetObjectId].o);
-  //       return window;
-  //     }
-  //   }))
-  // }
 
   public rxShowInfoWindowEx(
     targetObjectId: string,
@@ -399,60 +439,146 @@ export class GMapApi {
     }))
   }
 
-  public addCircle(id: string, opt: google.maps.CircleOptions) {
+  public addCircle(id: string, tag: string, opt: google.maps.CircleOptions) {
     // prettier-ignore
     this.m_sg.append(
       "GMapApi.addCircleObject",
-      this.rxServices()
-      .pipe(map(({ map }) => {
-        const circle = new google.maps.Circle(opt);
-        circle.addListener("click", () => {
-          this.m_onMapObjectClicked.next(id);
-        });
-        circle.addListener("dblclick", () => {
-          this.m_onMapObjectDoubleClicked.next(id);
-        });
-        circle.addListener("dragend", () => {
-          this.m_onMapObjectDragged.next(id);
-        });
-        circle.setMap(map);
-        this.addMapObject(id, {
-          t: "circle",
-          o: circle
-        });
-      }))
+      this.rxAddCircle(id, tag, opt)
     );
+  }
+
+  public rxAddCircle(id: string, tag: string, opt: google.maps.CircleOptions) {
+    // prettier-ignore
+    return this.rxServices()
+    .pipe(map(({ map }) => {
+      const circle = new google.maps.Circle(opt);
+      circle.addListener("click", () => {
+        this.m_onMapObjectClicked.next(id);
+      });
+      circle.addListener("dblclick", () => {
+        this.m_onMapObjectDoubleClicked.next(id);
+      });
+      circle.addListener("dragend", () => {
+        this.m_onMapObjectDragged.next(id);
+      });
+      circle.setMap(map);
+      this.addMapObject(id, {
+        t: "circle",
+        o: circle,
+        _: tag
+      });
+    }));
+  }
+
+  public addPolyline(
+    id: string,
+    tag: string,
+    opt: google.maps.PolylineOptions
+  ) {
+    // prettier-ignore
+    this.m_sg.append(
+      "GMapApi.addPolyline",
+      this.rxAddPolyline(id, tag, opt)
+    );
+  }
+
+  public rxAddPolyline(
+    id: string,
+    tag: string,
+    opt: google.maps.PolylineOptions
+  ) {
+    // prettier-ignore
+    return this.rxServices()
+    .pipe(map(({ map }) => {
+      const polyline = new google.maps.Polyline(opt);
+      polyline.setMap(map);
+      this.addMapObject(id, {
+        t: "polyline",
+        o: polyline,
+        _: tag
+      });
+    }));
+  }
+
+  public addTrafficLayer(
+    id: string,
+    tag: string,
+    opt: google.maps.TrafficLayerOptions
+  ) {
+    // prettier-ignore
+    this.m_sg.append(
+      "GMapApi.addTrafficLayer",
+      this.rxAddTrafficLayer(id, tag, opt)
+    );
+  }
+
+  public rxAddTrafficLayer(
+    id: string,
+    tag: string,
+    opt: google.maps.TrafficLayerOptions
+  ) {
+    // prettier-ignore
+    return this.rxServices()
+    .pipe(map(({ map }) => {
+      const trafficlayer = new google.maps.TrafficLayer(opt);
+      trafficlayer.setMap(map);
+      this.addMapObject(id, {
+        t: "trafficlayer",
+        o: trafficlayer,
+        _: tag
+      });
+    }));
   }
 
   public addOverlay<T extends google.maps.OverlayView>(
     id: string,
+    tag: string,
     ctor: () => T
   ) {
     // prettier-ignore
     this.m_sg.append(
       "GMapApi.addOverlay",
-      this.rxServices()
-      .pipe(map(({map}) => {
-        const overlay = ctor();
-        overlay.setMap(map);
-        this.addMapObject(id, {
-          t: "overlay",
-          o: overlay
-        });
-      }))
+      this.rxAddOverlay(id, tag, ctor)
     );
   }
 
+  public rxAddOverlay<T extends google.maps.OverlayView>(
+    id: string,
+    tag: string,
+    ctor: () => T
+  ) {
+    // prettier-ignore
+    return this.rxServices()
+    .pipe(map(({map}) => {
+      const overlay = ctor();
+      overlay.setMap(map);
+      this.addMapObject(id, {
+        t: "overlay",
+        o: overlay,
+        _: tag
+      });
+    }));
+  }
+
   public addMapObject(id: string, obj: mapObject_t) {
-    this.deleteMapObject(id);
+    this.deleteMapObjectWithId(id);
     this.m_mapObjects[id] = obj;
   }
 
-  public deleteMapObject(id: string) {
+  public deleteMapObjectWithId(id: string) {
     if (id in this.m_mapObjects) {
       this.detachMapObject(this.m_mapObjects[id]);
       delete this.m_mapObjects[id];
     }
+  }
+
+  public deleteMapObjectWithTagRegex(tag: RegExp) {
+    Object.keys(this.m_mapObjects)
+      .map((id) => ({ id: id, o: this.m_mapObjects[id] }))
+      .filter((x) => x.o._.match(tag))
+      .forEach((x) => {
+        this.deleteMapObjectWithId(x.id);
+      });
   }
 
   public fetchMapObject(id: string) {
@@ -548,5 +674,101 @@ export class GMapApi {
         });
       }))
     );
+  }
+
+  public createOverlay(
+    latlng: google.maps.LatLng,
+    content: HTMLElement
+  ): google.maps.OverlayView {
+    /**
+     * google.maps.OverlayView は google maps services のロードが完了しないと
+     * 関数の実体が存在していないのでクラス生成を行うことができない。
+     * したがって、関数型を使用してクラス生成を遅延させる必要がある。
+     *
+     * 参考にした URL
+     * https://developers.google.com/maps/documentation/javascript/examples/overlay-popup
+     *
+     * 要素の階層構造は下記のとおり
+     *  +-- container ------+
+     *  |  +-- inner ----+  |
+     *  |  |   content   |  |
+     *  |  +-------------+  |
+     *  +-------------------+
+     *
+     * 表示座標は下記のとおり
+     *
+     *    +-- inner ----+
+     *    |   content   |
+     *    x-------------+
+     *    ^
+     *    |
+     *    +-- conteiner (0 x 0 pixel)
+     *
+     * これは container の `height: 0` とすることで、指定座標の下から上へ配置されることを利用している。
+     *
+     * content のスタイルを下記のように組み合わせて設定した場合の表示座標
+     *  `position: ablsolute`
+     *  `transform: translate(-50%, -100%)`
+     *
+     *    +-- inner ----+
+     *    |   content   |
+     *    +------x------+
+     *           ^
+     *           |
+     *           +-- conteiner (0 x 0 pixel)
+     */
+    class Overlay extends google.maps.OverlayView {
+      private m_latlng: google.maps.LatLng;
+      private m_containerDiv: HTMLDivElement;
+
+      constructor(latlng: google.maps.LatLng, content: HTMLElement) {
+        super();
+        this.m_latlng = latlng;
+
+        const inner = document.createElement("div");
+        inner.style.position = "absolute";
+        inner.style.width = "100%";
+        inner.style.left = "0";
+        inner.style.bottom = "0";
+        inner.appendChild(content);
+
+        const container = document.createElement("div");
+        container.style.height = "0";
+        container.style.position = "absolute";
+        container.appendChild(inner);
+
+        this.m_containerDiv = container;
+        Overlay.preventMapHitsAndGesturesFrom(this.m_containerDiv);
+      }
+
+      onAdd() {
+        this.getPanes()?.floatPane.appendChild(this.m_containerDiv);
+      }
+
+      onRemove() {
+        this.m_containerDiv.parentElement?.removeChild(this.m_containerDiv);
+      }
+
+      draw() {
+        const divPosition = this.getProjection().fromLatLngToDivPixel(
+          this.m_latlng
+        )!;
+
+        const display =
+          Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000
+            ? "block"
+            : "none";
+
+        if (display === "block") {
+          this.m_containerDiv.style.left = divPosition.x + "px";
+          this.m_containerDiv.style.top = divPosition.y + "px";
+        }
+
+        if (this.m_containerDiv.style.display !== display) {
+          this.m_containerDiv.style.display = display;
+        }
+      }
+    }
+    return new Overlay(latlng, content);
   }
 }
